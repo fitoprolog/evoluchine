@@ -29,7 +29,6 @@ unsigned char evoluchine_eval(unsigned char *operations,int operations_size, uns
      cop = operations[op];
      switch(cop){
         case SUM:
-          //SOM=MAX(mulregister,input[input_order[op]]);
           SOM+=mulregister;
           if ( (op+1) < operations_size)
             mulregister=input[input_order[op+1]];
@@ -41,7 +40,6 @@ unsigned char evoluchine_eval(unsigned char *operations,int operations_size, uns
           mulregister =MIN(mulregister,255-input[input_order[op]]); 
           break;
         case NEGATE_SUM:
-           //SOM=MAX(255-mulregister,input[input_order[op]]);
            SOM+=255-mulregister;
            if ( (op+1) < operations_size)
              mulregister=input[input_order[op+1]]; 
@@ -65,13 +63,11 @@ float evoluchine_batch_evaluate(unsigned char *operations,
                           operations_size,
                           (inputs+b*inputs_size),
                           inputs_order);
-    if (res != ground_thruts[b])
-    {
-      printf("GOT %d EXPECTED %d\n",res,ground_thruts[b]);
-      err++;
-    }
+    if (ground_thruts[b] != res )
+      printf("Expected %d Got %d\n",ground_thruts[b],res);
+    err += abs(res-ground_thruts[b]);
   }
-  return err/batch_size;
+  return err;
 }
 
 
@@ -90,26 +86,25 @@ void evoluchine_batch_solve(unsigned char *operations,
   lastError=evoluchine_batch_evaluate(operations,inputs_order,operations_size,
                                       inputs_size,inputs,ground_thruts,batch_size);
 
-  unsigned char *mutated_operations = (unsigned char *)malloc(operations_size);
+  unsigned char *mutated_operations = (unsigned char *)malloc(operations_size * sizeof (unsigned char));
   int  *mutated_order      = (int  *)malloc(sizeof(int)*operations_size);
   
   for (int e=0; e!= epochs; e++){
     evoluchine_randomize(mutated_operations,operations_size, mutated_order,inputs_size);
-    float mError = evoluchine_batch_evaluate(mutated_operations,mutated_order,
+    const float mError = evoluchine_batch_evaluate(mutated_operations,mutated_order,
                                              operations_size,inputs_size,inputs,ground_thruts,batch_size);
-    printf("Mutated Error (%d)=%f\n",e,lastError);
+    printf("Mutated Error (%d)=%f\n",e,mError);
     if (mError < lastError)
     {
       lastError = mError;
       memcpy(operations, mutated_operations, operations_size);
-      memcpy(inputs_order, mutated_order, operations_size);
-      if (mError <= 1e-6) {
-        printf("Bingo!\n");
+      memcpy(inputs_order, mutated_order, operations_size*sizeof(int));
+      if (mError == 0) {
+        printf("Bingo %f!\n",mError);
         return;
       }
     }
   }
-  printf("Error %f\n",lastError);
 }
 
 

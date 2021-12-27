@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include <time.h>
 #include <evoluchine.h>
-#define NPARAMETERS 5
+#define NPARAMETERS 6
 int main()
 {
   srand(time(0));
@@ -21,11 +21,9 @@ int main()
   //return 1;
   unsigned char rand_opers[NPARAMETERS]={0};//={MULTIPLY,NEGATE_MULTIPLY,SUM,NEGATE_MULTIPLY,MULTIPLY,SUM};
   int rand_inputs[NPARAMETERS]={0};//={0,1,-1,0,1,-1};
-  evoluchine_randomize(rand_opers,NPARAMETERS,rand_inputs,2);
-  //printf("RANDOMIZED %d\n",evoluchine_eval(rand_opers,6,a,rand_inputs));
-  unsigned char train_inputs[]={0,0,255,0,0,255,255,255};
-  unsigned char train_grounds[]={0,255,255,0};
-  evoluchine_batch_solve(rand_opers,rand_inputs,NPARAMETERS,2,train_inputs,train_grounds,4,100000);
+  unsigned char train_inputs[]={0,0,255,0,0,255,255,255,0,128,128,0};
+  unsigned char train_grounds[]={0,255,255,0,128,128};
+  evoluchine_batch_solve(rand_opers,rand_inputs,NPARAMETERS,2,train_inputs,train_grounds,6,100000);
   for (int i=0; i!= NPARAMETERS; i++)
   {
     printf(" %d ",rand_opers[i]);
@@ -37,5 +35,10 @@ int main()
     printf(" %d ",rand_inputs[i]);
   }
   printf("\n");
+  unsigned char fuzzy_input[]={128,0};
+  printf("%d\n",evoluchine_eval(rand_opers,NPARAMETERS,fuzzy_input,rand_inputs)); 
+  fuzzy_input[0]=83;
+  fuzzy_input[1]=0;
+  printf("%d\n",evoluchine_eval(rand_opers,NPARAMETERS,fuzzy_input,rand_inputs));
 
 }
