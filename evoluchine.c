@@ -99,6 +99,10 @@ void evoluchine_batch_solve(char *operations,
       lastError = mError;
       memcpy(operations, mutated_operations, operations_size);
       memcpy(inputs_order, mutated_order, operations_size);
+      if (mError <= 1e-6) {
+        printf("Bingo!\n");
+        return;
+      }
     }
   }
   printf("Error %f\n",lastError);
