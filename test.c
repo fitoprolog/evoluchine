@@ -3,42 +3,34 @@
 #include <time.h>
 #include <evoluchine.h>
 #define NPARAMETERS 6
-int main()
-{
-  srand(time(0));
-  unsigned char xor_equation[]={MULTIPLY,NEGATE_MULTIPLY,SUM,NEGATE_MULTIPLY,MULTIPLY,SUM};
-  int xor_order[]={0,1,-1,0,1,-1}; 
-  //unsigned char xor_equation[]={1,2,1,2};
-  //int xor_order[] = { 1,0,1,0};
-  unsigned char a[]={0,0};
-  unsigned char b[]={255,0};
-  unsigned char c[]={0,255};
-  unsigned char d[]={255,255};
-  printf("%d\n",evoluchine_eval(xor_equation,4,a,xor_order));
-  printf("%d\n",evoluchine_eval(xor_equation,4,b,xor_order));
-  printf("%d\n",evoluchine_eval(xor_equation,4,c,xor_order));
-  printf("%d\n",evoluchine_eval(xor_equation,4,d,xor_order));
-  //return 1;
-  unsigned char rand_opers[NPARAMETERS]={0};//={MULTIPLY,NEGATE_MULTIPLY,SUM,NEGATE_MULTIPLY,MULTIPLY,SUM};
-  int rand_inputs[NPARAMETERS]={0};//={0,1,-1,0,1,-1};
+
+void train_fuzzy_xor(){
   unsigned char train_inputs[]={0,0,255,0,0,255,255,255,0,128,128,0};
   unsigned char train_grounds[]={0,255,255,0,128,128};
-  evoluchine_batch_solve(rand_opers,rand_inputs,NPARAMETERS,2,train_inputs,train_grounds,6,100000);
-  for (int i=0; i!= NPARAMETERS; i++)
-  {
-    printf(" %d ",rand_opers[i]);
-  }
-  printf("\n");
-  printf("--------------------\n");
-  for (int i=0; i!= NPARAMETERS; i++)
-  {
-    printf(" %d ",rand_inputs[i]);
-  }
-  printf("\n");
-  unsigned char fuzzy_input[]={128,0};
-  printf("%d\n",evoluchine_eval(rand_opers,NPARAMETERS,fuzzy_input,rand_inputs)); 
-  fuzzy_input[0]=83;
-  fuzzy_input[1]=0;
-  printf("%d\n",evoluchine_eval(rand_opers,NPARAMETERS,fuzzy_input,rand_inputs));
+  struct train_parameters p= evoluchine_init_train_parameters(100);
+  p.batch_size=sizeof(train_grounds);
+  p.ground_truth = train_grounds;
+  p.increase_operations_each_n_epoch=1000;
+  p.inputs_size=2;
+  p.operations_size=10;
+  p.train_inputs = train_inputs;
+  p.epochs=1000;
+  evoluchine_batch_solve(&p);
+  printf("----------------------------Results-------------------------\n");
+  unsigned char testInput[]={25,0};
+  unsigned char res = evoluchine_eval(p.operations,p.operations_size,testInput,p.inputs_order);
+  printf("res %d\n",res);
+  testInput[0]=0;
+  testInput[1]=200;
+  res = evoluchine_eval(p.operations,p.operations_size,testInput,p.inputs_order);
+  printf("res %d\n",res);
+  testInput[0]=200;
+  res = evoluchine_eval(p.operations,p.operations_size,testInput,p.inputs_order);
+  printf("res %d\n",res);
+  
+}
 
+int main()
+{
+  train_fuzzy_xor();
 }

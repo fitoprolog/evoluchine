@@ -1,3 +1,4 @@
+#include<stdint.h>
 #ifndef _EVOLUCHINE_H_ 
 #define _EVOLUCHINE_H_
 #define MULTIPLY 0 
@@ -7,22 +8,24 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void evoluchine_randomize(unsigned char *operations,int operations_size, int *inputs_order, int input_size);
-unsigned char evoluchine_eval(unsigned char *operations,int operations_size, unsigned char *input,int *input_order);
-float evoluchine_batch_evaluate(unsigned char *operations,
-                            int *inputs_order,
-                            int operations_size ,
-                            int inputs_size,
-                            unsigned char *inputs,
-                            unsigned char *ground_thruts,
-                            int batch_size); 
-void evoluchine_batch_solve(unsigned char *operations,
-                            int *inputs_order,
-                            int operations_size ,
-                            int inputs_size,
-                            unsigned char *inputs,
-                            unsigned char *ground_thruts,
-                            int batch_size,
-                            int epochs);
+void evoluchine_randomize(unsigned char *operations,int32_t operations_size, int *inputs_order, int input_size);
+unsigned char evoluchine_eval(unsigned char *operations,int32_t operations_size, unsigned char *input,int *input_order);
+
+struct train_parameters{
+  unsigned char *operations; 
+  int32_t *inputs_order; 
+  int32_t inputs_size;
+  int32_t operations_size;
+  unsigned char *train_inputs;
+  unsigned char *ground_truth;
+  int32_t batch_size;
+  int32_t increase_operations_each_n_epoch;
+  int32_t parameter_increase_limit;
+  int32_t epochs;
+};
+
+float evoluchine_batch_evaluate(struct train_parameters *params); 
+void  evoluchine_batch_solve(struct train_parameters *params);
+struct train_parameters evoluchine_init_train_parameters(int32_t limitParameters);
 
 #endif 
