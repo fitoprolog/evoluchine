@@ -1,7 +1,8 @@
 #include<stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <time.h>
 #include <evoluchine.h>
+#include <math.h>
 #define NPARAMETERS 6
 
 void train_fuzzy_xor(){
@@ -29,8 +30,21 @@ void train_fuzzy_xor(){
   printf("res %d\n",res);
   
 }
+void train_sin(){
+  unsigned char train_inputs[]={0,0,255,0,0,255,255,255,0,128,128,0};
+  unsigned char train_grounds[]={0,255,255,0,128,128};
+  struct train_parameters p= evoluchine_init_train_parameters(100);
+  p.batch_size=sizeof(train_grounds);
+  p.ground_truth = train_grounds;
+  p.increase_operations_each_n_epoch=1000;
+  p.inputs_size=2;
+  p.operations_size=10;
+  p.train_inputs = train_inputs;
+  p.epochs=1000;
+  evoluchine_batch_solve(&p);
+}
 
 int main()
 {
-  train_fuzzy_xor();
+  //train_fuzzy_xor();
 }
