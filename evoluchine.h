@@ -1,12 +1,18 @@
 #include<stdint.h>
 #ifndef _EVOLUCHINE_H_ 
 #define _EVOLUCHINE_H_
-#define MULTIPLY 0 
-#define NEGATE_MULTIPLY 1 
-#define SUM  2
-#define NEGATE_SUM 3
-#define MULTIPLY_INTERNAL 4
-#define NEGATE_MULTIPLY_INTERNAL 5
+#define MULTIPLY            0 
+#define NEGATE_MULTIPLY     1 
+#define SUM                 2
+#define NEGATE_SUM          3
+#define MULTIPLY_ARITHMETIC 4
+#define SUM_ARITHMETIC      5
+#define DISPLACE_LEFT       6
+#define DISPLACE_RIGHT      7 
+#define DO_NOTHING          8
+#define REST_ARITHMETIC     9
+
+#define NUMBER_OF_OPERATIONS 10
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

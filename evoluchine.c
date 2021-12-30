@@ -3,10 +3,6 @@
 #include <time.h>
 #include<stdint.h>
 #include <evoluchine.h>
-#define MULTIPLY 0 
-#define NEGATE_MULTIPLY 1 
-#define SUM  2
-#define NEGATE_SUM 3
 
 struct train_parameters evoluchine_init_train_parameters(int32_t limit,
                                                          int32_t internal_limit){  
@@ -16,6 +12,7 @@ struct train_parameters evoluchine_init_train_parameters(int32_t limit,
   memset(ret.inputs_order,0,sizeof(int32_t)*limit);
   ret.operations   = (unsigned char*) malloc(sizeof(unsigned char)*limit);
   memset(ret.operations,0,sizeof(unsigned char)*limit);
+  ret.operations_size=limit;
   ret.internal_constants_size=internal_limit;
   if (internal_limit){
     ret.internal_constants = (unsigned char*) malloc(sizeof(unsigned char)*internal_limit);
@@ -28,10 +25,9 @@ void evoluchine_randomize(unsigned char *operations,int32_t operations_size, int
                           int32_t input_size,unsigned char *internal_constants,int32_t internal_limit){
   for(int32_t o=0;o!= operations_size;o++){
     if ( random()%2)
-        operations[o]=random()%4;
-    if ( random()%2){
-      inputs_order[o]=random()%input_size+internal_limit;
-    }
+        operations[o]=random()%NUMBER_OF_OPERATIONS;
+    if ( random()%2)
+      inputs_order[o]=random()%(input_size+internal_limit);
   }
   for(int32_t i=0; i!= internal_limit; i++){
     if (random()%2)
@@ -60,7 +56,12 @@ unsigned char evoluchine_eval(unsigned char *operations,int32_t operations_size,
      cop = operations[op];
      switch(cop){
         case SUM:
-          SOM+=mulregister;
+          SOM=MAX(mulregister,SOM);
+          if ( (op+1) < operations_size+internal_limit)
+            mulregister=input_source[input_order[op+1-input_offset]];
+          break;
+        case REST_ARITHMETIC:
+          SOM = SOM-mulregister;
           if ( (op+1) < operations_size+internal_limit)
             mulregister=input_source[input_order[op+1-input_offset]];
           break;
@@ -71,10 +72,28 @@ unsigned char evoluchine_eval(unsigned char *operations,int32_t operations_size,
           mulregister =MIN(mulregister,255-input_source[input_order[op-input_offset]]); 
           break;
         case NEGATE_SUM:
-           SOM+=255-mulregister;
+           SOM=MAX(255-mulregister,SOM);
            if ( (op+1) < operations_size+internal_limit)
              mulregister=input_source[input_order[op+1-input_offset]]; 
            break;
+        case  MULTIPLY_ARITHMETIC:
+           mulregister *= input_source[input_order[op+1-input_offset]];
+           break;
+        case SUM_ARITHMETIC:
+           SOM+=mulregister;
+           if ( (op+1) < operations_size+internal_limit)
+             mulregister=input_source[input_order[op+1-input_offset]];
+           break;
+        case DISPLACE_LEFT:
+           mulregister = mulregister << input_source[input_order[op+1-input_offset]];
+          break;
+        case DISPLACE_RIGHT:
+          mulregister = mulregister >> input_source[input_order[op+1-input_offset]];
+          break;
+
+        case DO_NOTHING:
+          break;
+
      }
   }
   return SOM;
@@ -89,8 +108,6 @@ float evoluchine_batch_evaluate(struct train_parameters * p){
                           p->inputs_order,
                           p->internal_constants,
                           p->internal_constants_size);
-    if (p->ground_truth[b] != res )
-      printf("Expected %d Got %d\n",p->ground_truth[b],res);
     err += abs(res-p->ground_truth[b]);
   }
   return err;
@@ -119,7 +136,7 @@ void evoluchine_batch_solve(struct train_parameters *p){
 
   for (int32_t e=0; e!= p->epochs; e++){
     evoluchine_randomize(mutated_operations,p->operations_size, mutated_order,p->inputs_size,
-    p->internal_constants,p->internal_constants_size);
+                         p->internal_constants,p->internal_constants_size);
     const float mError = evoluchine_batch_evaluate(&mutated_params);
     printf("Mutated Error (%d)=%f\n",e,mError);
     if (mError < lastError){
@@ -127,7 +144,7 @@ void evoluchine_batch_solve(struct train_parameters *p){
       memcpy(p->operations, mutated_operations, p->operations_size*sizeof(unsigned char));
       memcpy(p->inputs_order, mutated_order, p->operations_size*sizeof(int32_t));
       memcpy(p->internal_constants,mutated_constants,p->internal_constants_size);
-      if (mError <= 1e-12) {
+      if (mError <= 1e-16) {
         printf("Bingo %f!\n",mError);
         return;
       }
